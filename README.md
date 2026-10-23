@@ -4,6 +4,9 @@ Salas simples para compartilhar a tela direto entre navegadores (WebRTC, sem ser
 Visual inspirado no vidro líquido do iOS.
 
 ## Recursos
+- Link de convite com `#codigo`: abre e já entra na sala (só pede o nome, ou nem isso se já estiver salvo)
+- Cartões na tela inicial: o que dá para fazer e blog de novidades (edite a lista `POSTS` no `index.html`)
+- Aviso para todos quando alguém começa a compartilhar
 - Compartilhar a tela (computador), câmera e microfone
 - Chat da sala e reações com emojis
 - Convite por link (no celular abre o menu de compartilhar)
@@ -15,11 +18,8 @@ Visual inspirado no vidro líquido do iOS.
 2. Toque no código no topo para copiar o link e envie para quem vai entrar.
 3. Clique em **Compartilhar tela**. Toque numa tela recebida para ver em tela cheia.
 
-## Publicar no GitHub Pages
-1. Crie um repositório público no GitHub.
-2. Envie `index.html` e este `README.md` para a branch `main`.
-3. Em **Settings → Pages**, escolha *Deploy from a branch*, branch `main`, pasta `/ (root)`.
-4. Em cerca de um minuto o site fica em `https://SEU-USUARIO.github.io/NOME-DO-REPO/`.
+## Links publicados
+1. https://capimmm.github.io/share/
 
 ## Como funciona
 - Usa a biblioteca [Trystero](https://github.com/dmotz/trystero) para as pessoas se encontrarem pelo código da sala (via relays públicos) e então trocarem vídeo diretamente.
