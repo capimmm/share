@@ -136,23 +136,59 @@ html,body{overscroll-behavior:none;touch-action:manipulation}
 #picker{bottom:calc(env(safe-area-inset-bottom,0px) + 82px)}
 #picker button{width:42px;height:42px;font-size:24px}
 }
+
+#lobby{overflow:auto;place-items:start center;padding:max(20px,env(safe-area-inset-top,0px)) 16px calc(env(safe-area-inset-bottom,0px) + 40px)}
+.stack{width:min(440px,100%);margin:auto;display:flex;flex-direction:column;gap:16px}
+.stack .panel{width:100%}
+.card{border-radius:30px;padding:22px 20px;animation:rise .9s var(--spring) .15s both}
+.card+.card{animation-delay:.25s}
+.ct{margin:0 0 12px;font-size:18px;letter-spacing:-.02em}
+.feats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.feat{border-radius:20px;padding:12px;background:var(--glass-s);box-shadow:inset 0 1px 0 var(--edge);transition:transform .5s var(--spring)}
+.feat:hover{transform:translateY(-3px) scale(1.02)}
+.feat b{display:block;font-size:22px;line-height:1.2}
+.feat span{display:block;font-weight:600;font-size:14px;margin-top:4px}
+.feat small{display:block;color:var(--mut);font-size:12.5px;line-height:1.35;margin-top:2px}
+.post{border-radius:20px;background:var(--glass-s);box-shadow:inset 0 1px 0 var(--edge);overflow:hidden;margin-bottom:10px}
+.post:last-child{margin-bottom:0}
+.ph{width:100%;text-align:left;border:0;background:none;padding:14px 16px;cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.pt{font-weight:600;display:flex;align-items:center;gap:8px}
+.pt i{font-style:normal;font-size:11px;font-weight:700;color:#fff;background:linear-gradient(180deg,#3b9bff,#0a73f0);border-radius:99px;padding:2px 8px}
+.pd{color:var(--mut);font-size:12.5px}
+.pb{display:grid;grid-template-rows:0fr;transition:grid-template-rows .55s var(--ease)}
+.post.open .pb{grid-template-rows:1fr}
+.pb p{overflow:hidden;margin:0;padding:0 16px;color:var(--mut);font-size:14.5px;transition:padding .55s var(--ease)}
+.post.open .pb p{padding-bottom:14px}
+.invite{text-align:center;margin:0;font-weight:600}
+#toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 68px);z-index:9;padding:10px 18px;border-radius:999px;font-size:14px;font-weight:600;max-width:calc(100% - 24px);text-align:center;animation:drop .7s var(--spring) both;transition:opacity .4s,transform .4s var(--ease)}
+#toast.bye{opacity:0;transform:translate(-50%,-14px)}
 </style>
 </head>
 <body>
 <div class="bg"><i></i><i></i><i></i></div>
 
-<section id="lobby">
+<section id="lobby"><div class="stack">
   <div class="panel glass">
     <div class="logo"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="13" rx="3.5"/><path d="M8 21h8M12 17v4"/><path d="M9.5 10.5 12 8l2.5 2.5M12 8v5"/></svg></div>
     <h1>Salas</h1>
     <p class="sub">Entre numa sala e compartilhe sua tela com quem estiver nela.</p>
+    <p class="invite hide" id="inv"></p>
     <label class="field"><span>Seu nome</span><input id="name" maxlength="24" placeholder="Ex.: Ana" autocomplete="off"></label>
-    <label class="field"><span>Código da sala</span><input id="code" maxlength="40" placeholder="Ex.: reuniao-12" autocapitalize="off" autocomplete="off"></label>
+    <label class="field" id="codef"><span>Código da sala</span><input id="code" maxlength="40" placeholder="Ex.: reuniao-12" autocapitalize="off" autocomplete="off"></label>
     <button class="btn pri" id="join">Entrar na sala</button>
     <button class="btn" id="new">Criar sala nova</button>
     <div id="note" class="note hide"></div><div id="err"></div>
   </div>
-</section>
+  <div class="card glass"><h2 class="ct">O que você pode fazer</h2><div class="feats">
+    <div class="feat"><b>🖥️</b><span>Compartilhar a tela</span><small>Todos na sala veem na hora, em tempo real.</small></div>
+    <div class="feat"><b>👀</b><span>Assistir juntos</span><small>Veja a tela de quem compartilhar, em tela cheia.</small></div>
+    <div class="feat"><b>🎙️</b><span>Voz e câmera</span><small>Fale com a sala ou mostre algo com a câmera.</small></div>
+    <div class="feat"><b>💬</b><span>Chat e reações</span><small>Mande mensagens e emojis que aparecem para todos.</small></div>
+    <div class="feat"><b>🔗</b><span>Convite por link</span><small>Quem abre o link entra direto, só com o nome.</small></div>
+    <div class="feat"><b>📱</b><span>Celular e computador</span><small>No celular você assiste, conversa e usa a câmera.</small></div>
+  </div></div>
+  <div class="card glass"><h2 class="ct">Blog e novidades</h2><div id="blog"></div></div>
+</div></section>
 
 <section id="app" class="hide">
   <div id="top" class="glass">
@@ -232,7 +268,7 @@ async function enter(){
   room.onPeerStream((s,id,meta)=>{
     const k=(meta&&meta.k)||(s.getVideoTracks().length?'tela':'mic');
     if(k==='mic'){dropAud(id);const a=new Audio();a.autoplay=true;a.srcObject=s;auds[id]=a;a.play().catch(()=>{});return}
-    addTile('r'+s.id,s,label(id,k),false,id,k);
+    addTile('r'+s.id,s,label(id,k),false,id,k);toast((names[id]||'Alguém')+(k==='cam'?' abriu a câmera':' começou a compartilhar a tela'));
     s.onremovetrack=()=>{if(!s.getTracks().length)removeTile('r'+s.id)};
   });
 
@@ -305,6 +341,7 @@ async function start(k){
     room.addStream(s,undefined,{k});
     const vt=s.getVideoTracks()[0];if(vt)vt.onended=()=>stop(k);
     ui(k,true);
+    toast(k==='mic'?'Seu microfone está aberto para a sala':(peers.size?'Sua '+(k==='cam'?'câmera':'tela')+' está sendo vista por '+peers.size+(peers.size>1?' pessoas':' pessoa'):'Compartilhando. Aguardando alguém entrar na sala'));
   }catch(e){if(e&&e.name!=='NotAllowedError')alert('Não foi possível iniciar: '+(e.message||e))}
 }
 function stop(k){
@@ -344,6 +381,36 @@ $('bleave').onclick=()=>{
   document.querySelectorAll('.tile').forEach(dropTile);
   $('app').classList.add('hide');$('lobby').classList.remove('hide');
 };
+
+const POSTS=[
+ {d:'23 out 2026',t:'Entrada direta por link',n:1,b:'Quando você abre um link com o código da sala (o trecho depois do #), o site já entra na sala. Se o nome já estiver salvo no aparelho, nem precisa digitar: é só abrir. Também chegaram os avisos para todos quando alguém começa a compartilhar.'},
+ {d:'22 out 2026',t:'Chat, reações, câmera e microfone',b:'A sala ganhou chat, reações com emoji, microfone e câmera, botão para silenciar cada tela recebida e o menu de compartilhar do celular para convidar pessoas.'},
+ {d:'21 out 2026',t:'Visual de vidro líquido e versão para celular',b:'Novo visual inspirado no iOS, com animações suaves, fundo vivo e layout pensado para telas pequenas.'},
+ {d:'20 out 2026',t:'Primeira versão',b:'Salas por código e compartilhamento de tela direto entre navegadores, sem servidor próprio.'}
+];
+POSTS.forEach((p,i)=>{
+  const a=document.createElement('article');a.className='post'+(i===0?' open':'');
+  a.innerHTML='<button class="ph"><span class="pt"></span><small class="pd"></small></button><div class="pb"><p></p></div>';
+  a.querySelector('.pt').textContent=p.t;
+  if(p.n){const n=document.createElement('i');n.textContent='Novo';a.querySelector('.pt').append(n)}
+  a.querySelector('.pd').textContent=p.d;a.querySelector('p').textContent=p.b;
+  a.querySelector('.ph').onclick=()=>a.classList.toggle('open');
+  $('blog').append(a);
+});
+
+function toast(text){
+  document.querySelectorAll('#toast').forEach(t=>t.remove());
+  const t=document.createElement('div');t.id='toast';t.className='glass';t.textContent=text;document.body.append(t);
+  setTimeout(()=>t.classList.add('bye'),3200);setTimeout(()=>t.remove(),3700);
+}
+
+const inv=clean(location.hash.slice(1));
+if(inv){
+  $('code').value=inv;$('codef').classList.add('hide');$('new').classList.add('hide');
+  $('inv').textContent='Você foi convidado para a sala '+inv;$('inv').classList.remove('hide');
+  $('join').textContent='Entrar';
+  if($('name').value.trim())enter();else setTimeout(()=>$('name').focus(),600);
+}
 </script>
 </body>
 </html>
