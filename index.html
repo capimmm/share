@@ -138,8 +138,11 @@ html,body{overscroll-behavior:none;touch-action:manipulation}
 }
 
 #lobby{overflow:auto;place-items:start center;padding:max(20px,env(safe-area-inset-top,0px)) 16px calc(env(safe-area-inset-bottom,0px) + 40px)}
-.stack{width:min(440px,100%);margin:auto;display:flex;flex-direction:column;gap:16px}
-.stack .panel{width:100%}
+.stack{width:min(440px,100%);margin:auto;display:grid;gap:16px;align-items:start;grid-template-columns:minmax(0,1fr);grid-template-areas:"panel" "feat" "blog"}
+.stack .panel{grid-area:panel;width:100%}
+#cfeat{grid-area:feat}#cblog{grid-area:blog}
+@media (min-width:640px){.stack{width:min(760px,100%);grid-template-columns:1fr 1fr;grid-template-areas:"panel panel" "feat blog"}.stack .panel{width:min(440px,100%);justify-self:center}}
+@media (min-width:1040px){.stack{width:min(1200px,100%);grid-template-columns:minmax(0,1fr) 420px minmax(0,1fr);grid-template-areas:"feat panel blog"}.stack .panel{width:100%;justify-self:stretch}}
 .card{border-radius:30px;padding:22px 20px;animation:rise .9s var(--spring) .15s both}
 .card+.card{animation-delay:.25s}
 .ct{margin:0 0 12px;font-size:18px;letter-spacing:-.02em}
@@ -162,12 +165,24 @@ html,body{overscroll-behavior:none;touch-action:manipulation}
 .invite{text-align:center;margin:0;font-weight:600}
 #toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 68px);z-index:9;padding:10px 18px;border-radius:999px;font-size:14px;font-weight:600;max-width:calc(100% - 24px);text-align:center;animation:drop .7s var(--spring) both;transition:opacity .4s,transform .4s var(--ease)}
 #toast.bye{opacity:0;transform:translate(-50%,-14px)}
+
+.thfix{position:fixed;right:16px;top:calc(env(safe-area-inset-top,0px) + 14px);z-index:3}
+#st{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--mut);white-space:nowrap}
+#st i{width:9px;height:9px;border-radius:50%;background:#ff9f0a;animation:pulse 1.2s ease-in-out infinite}
+#st.ok i{background:#30d158;animation:none;box-shadow:0 0 8px #30d158}
+@keyframes pulse{50%{opacity:.25;transform:scale(.7)}}
+.tctl{opacity:0;transition:opacity .3s var(--ease);flex-wrap:wrap;justify-content:flex-end;max-width:70%}
+.tile:hover .tctl,.tile:focus-within .tctl{opacity:1}
+@media (hover:none){.tctl{opacity:1}}
+.tile.spot{grid-column:1/-1;grid-row:span 2}
+#picker{flex-wrap:wrap;justify-content:center;width:max-content;max-width:calc(100% - 16px);border-radius:28px}
+@media (max-width:560px){#top #th,#stt{display:none}}
 </style>
 </head>
 <body>
 <div class="bg"><i></i><i></i><i></i></div>
 
-<section id="lobby"><div class="stack">
+<section id="lobby"><button class="tbtn thfix" id="th2" title="Tema claro/escuro">🌓</button><div class="stack">
   <div class="panel glass">
     <div class="logo"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="13" rx="3.5"/><path d="M8 21h8M12 17v4"/><path d="M9.5 10.5 12 8l2.5 2.5M12 8v5"/></svg></div>
     <h1>Salas</h1>
@@ -179,7 +194,7 @@ html,body{overscroll-behavior:none;touch-action:manipulation}
     <button class="btn" id="new">Criar sala nova</button>
     <div id="note" class="note hide"></div><div id="err"></div>
   </div>
-  <div class="card glass"><h2 class="ct">O que você pode fazer</h2><div class="feats">
+  <div class="card glass" id="cfeat"><h2 class="ct">O que você pode fazer</h2><div class="feats">
     <div class="feat"><b>🖥️</b><span>Compartilhar a tela</span><small>Todos na sala veem na hora, em tempo real.</small></div>
     <div class="feat"><b>👀</b><span>Assistir juntos</span><small>Veja a tela de quem compartilhar, em tela cheia.</small></div>
     <div class="feat"><b>🎙️</b><span>Voz e câmera</span><small>Fale com a sala ou mostre algo com a câmera.</small></div>
@@ -187,13 +202,15 @@ html,body{overscroll-behavior:none;touch-action:manipulation}
     <div class="feat"><b>🔗</b><span>Convite por link</span><small>Quem abre o link entra direto, só com o nome.</small></div>
     <div class="feat"><b>📱</b><span>Celular e computador</span><small>No celular você assiste, conversa e usa a câmera.</small></div>
   </div></div>
-  <div class="card glass"><h2 class="ct">Blog e novidades</h2><div id="blog"></div></div>
+  <div class="card glass" id="cblog"><h2 class="ct">Blog e novidades</h2><div id="blog"></div></div>
 </div></section>
 
 <section id="app" class="hide">
   <div id="top" class="glass">
     <button class="code" id="rc" title="Convidar"><small>Sala</small><span id="rcv"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4M5 13v5a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-5"/></svg></button>
     <div class="avs" id="avs"></div>
+    <div id="st"><i></i><span id="stt">Procurando…</span></div>
+    <button class="tbtn" id="th" title="Tema claro/escuro">🌓</button>
   </div>
   <main id="grid"></main>
   <div id="empty"><div class="glass">
@@ -215,10 +232,13 @@ html,body{overscroll-behavior:none;touch-action:manipulation}
   <div id="fx"></div>
 </section>
 <script type="module">
-import {joinRoom} from 'https://esm.sh/trystero@0.21.5';
+let joinRoom;
+try{({joinRoom}=await import('https://esm.sh/trystero@0.21.5/torrent'))}
+catch(e){({joinRoom}=await import('https://esm.sh/trystero@0.21.5'))}
+const RTC={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:stun.cloudflare.com:3478'}]};
 const $=id=>document.getElementById(id);
 const APP_ID='salas-glass-app-v1';
-const EMO=['👍','❤️','😂','👏','🔥','😮'];
+const EMO=['👍','❤️','😂','👏','🔥','😮','✋','🎉'];
 const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Mac/.test(navigator.platform));
 const canScr=!!(navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia)&&!mobile;
 let room=null,myName='',names={},peers=new Set(),local={tela:null,cam:null,mic:null},act={},auds={},wake=null,unread=0;
@@ -251,7 +271,7 @@ async function enter(){
   const code=clean($('code').value);
   if(!code){err('Digite um código de sala.');return}
   try{localStorage.setItem('salas-nome',myName)}catch(e){}
-  try{room=joinRoom({appId:APP_ID},code)}catch(e){err('Não consegui entrar na sala.');console.error(e);return}
+  try{room=joinRoom({appId:APP_ID,rtcConfig:RTC},code)}catch(e){err('Não consegui entrar na sala.');console.error(e);return}
   try{history.replaceState(null,'','#'+code)}catch(e){}
 
   const [sn,gn]=room.makeAction('nome'),[ss,gs]=room.makeAction('parou'),[sc,gc]=room.makeAction('chat'),[sr,gr]=room.makeAction('reac');
@@ -274,6 +294,7 @@ async function enter(){
 
   $('lobby').classList.add('hide');$('app').classList.remove('hide');
   $('rcv').textContent=code;renderAvs();
+  setTimeout(()=>{if(room&&!peers.size)toast('Ainda procurando… peça para a outra pessoa abrir o mesmo link')},12000);
   try{wake=await navigator.wakeLock.request('screen')}catch(e){}
 }
 
@@ -294,6 +315,7 @@ function renderAvs(){
       d.style.background='linear-gradient(145deg,hsl('+hue(a.id)+' 85% 62%),hsl('+((hue(a.id)+40)%360)+' 80% 52%))';box.append(d)}
     d.textContent=(a.name||'?').trim().charAt(0).toUpperCase();d.title=a.name+(a.you?' (você)':'');
   });
+  const n=peers.size;$('st').className=n?'ok':'';$('stt').textContent=n?n+(n>1?' conectados':' conectado'):'Procurando…';
 }
 
 function addTile(key,stream,text,mute,peer,kind){
@@ -303,12 +325,13 @@ function addTile(key,stream,text,mute,peer,kind){
     const v=document.createElement('video');v.autoplay=true;v.playsInline=true;v.muted=mute;
     const g=document.createElement('span');g.className='tag glass';g.innerHTML='<b></b>';g.append(document.createTextNode(text));
     t.append(v,g);
-    if(!mute){
-      const c=document.createElement('div');c.className='tctl';
-      const m=document.createElement('button');m.className='tbtn';m.textContent='🔊';
-      m.onclick=e=>{e.stopPropagation();v.muted=!v.muted;m.textContent=v.muted?'🔇':'🔊'};
-      c.append(m);t.append(c);
-    }
+    const c=document.createElement('div');c.className='tctl';
+    const B=(tx,ti,fn)=>{const b=document.createElement('button');b.className='tbtn';b.textContent=tx;b.title=ti;b.onclick=e=>{e.stopPropagation();fn(b)};c.append(b);return b};
+    B('📌','Destacar',()=>t.classList.toggle('spot'));
+    if(!mute){const m=B('🔊','Silenciar',b=>{v.muted=!v.muted;b.textContent=v.muted?'🔇':'🔊'});m.classList.add('mute')}
+    B('📸','Salvar imagem',()=>{try{const cv=document.createElement('canvas');cv.width=v.videoWidth;cv.height=v.videoHeight;cv.getContext('2d').drawImage(v,0,0);cv.toBlob(bl=>{const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download='tela-'+Date.now()+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000)})}catch(e){}});
+    if(document.pictureInPictureEnabled)B('⧉','Janela flutuante',()=>{document.pictureInPictureElement?document.exitPictureInPicture():v.requestPictureInPicture().catch(()=>{})});
+    t.append(c);
     t.onclick=()=>{
       if(document.fullscreenElement)document.exitFullscreen();
       else if(t.requestFullscreen)t.requestFullscreen().catch(()=>{});
@@ -317,7 +340,7 @@ function addTile(key,stream,text,mute,peer,kind){
     $('grid').append(t);
   }
   const v=t.querySelector('video');if(v.srcObject!==stream)v.srcObject=stream;
-  v.play().catch(()=>{if(!v.muted){v.muted=true;const m=t.querySelector('.tbtn');if(m)m.textContent='🔇';v.play().catch(()=>{})}});
+  v.play().catch(()=>{if(!v.muted){v.muted=true;const m=t.querySelector('.mute');if(m)m.textContent='🔇';v.play().catch(()=>{})}});
   checkEmpty();
 }
 function dropTile(t){t.classList.add('out');setTimeout(()=>{t.remove();checkEmpty()},380)}
@@ -339,7 +362,7 @@ async function start(k){
     local[k]=s;
     if(k!=='mic')addTile('l-'+k,s,k==='cam'?'Sua câmera':'Sua tela',true,null,k);
     room.addStream(s,undefined,{k});
-    const vt=s.getVideoTracks()[0];if(vt)vt.onended=()=>stop(k);
+    const vt=s.getVideoTracks()[0];if(vt){vt.onended=()=>stop(k);if(k==='tela')try{vt.contentHint='detail'}catch(e){}}
     ui(k,true);
     toast(k==='mic'?'Seu microfone está aberto para a sala':(peers.size?'Sua '+(k==='cam'?'câmera':'tela')+' está sendo vista por '+peers.size+(peers.size>1?' pessoas':' pessoa'):'Compartilhando. Aguardando alguém entrar na sala'));
   }catch(e){if(e&&e.name!=='NotAllowedError')alert('Não foi possível iniciar: '+(e.message||e))}
@@ -383,7 +406,8 @@ $('bleave').onclick=()=>{
 };
 
 const POSTS=[
- {d:'23 out 2026',t:'Entrada direta por link',n:1,b:'Quando você abre um link com o código da sala (o trecho depois do #), o site já entra na sala. Se o nome já estiver salvo no aparelho, nem precisa digitar: é só abrir. Também chegaram os avisos para todos quando alguém começa a compartilhar.'},
+ {d:'23 out 2026',t:'Conexão mais rápida e mais recursos',n:1,b:'Mudei a forma de encontrar as pessoas na sala para tentar conectar mais rápido e adicionei um indicador de conexão no topo. Também chegaram: destacar uma tela (📌), salvar imagem (📸), janela flutuante (⧉), tema claro e escuro, novas reações (✋ 🎉) e atalhos de teclado no computador: S compartilha a tela, V a câmera, M o microfone e C abre o chat. No computador, os cartões da tela inicial ficam lado a lado.'},
+ {d:'23 out 2026',t:'Entrada direta por link',b:'Quando você abre um link com o código da sala (o trecho depois do #), o site já entra na sala. Se o nome já estiver salvo no aparelho, nem precisa digitar: é só abrir. Também chegaram os avisos para todos quando alguém começa a compartilhar.'},
  {d:'22 out 2026',t:'Chat, reações, câmera e microfone',b:'A sala ganhou chat, reações com emoji, microfone e câmera, botão para silenciar cada tela recebida e o menu de compartilhar do celular para convidar pessoas.'},
  {d:'21 out 2026',t:'Visual de vidro líquido e versão para celular',b:'Novo visual inspirado no iOS, com animações suaves, fundo vivo e layout pensado para telas pequenas.'},
  {d:'20 out 2026',t:'Primeira versão',b:'Salas por código e compartilhamento de tela direto entre navegadores, sem servidor próprio.'}
@@ -411,6 +435,17 @@ if(inv){
   $('join').textContent='Entrar';
   if($('name').value.trim())enter();else setTimeout(()=>$('name').focus(),600);
 }
+
+const applyTheme=t=>{if(t)document.documentElement.dataset.theme=t};
+try{applyTheme(localStorage.getItem('salas-tema'))}catch(e){}
+const flip=()=>{const cur=document.documentElement.dataset.theme;const dark=cur?cur==='dark':matchMedia('(prefers-color-scheme:dark)').matches;const n=dark?'light':'dark';applyTheme(n);try{localStorage.setItem('salas-tema',n)}catch(e){}};
+$('th').onclick=flip;$('th2').onclick=flip;
+addEventListener('keydown',e=>{
+  if(!room||e.target.matches('input,textarea')||e.ctrlKey||e.metaKey||e.altKey)return;
+  const k=e.key.toLowerCase();
+  if(k==='s'&&canScr)start('tela');else if(k==='m')start('mic');else if(k==='v')start('cam');
+  else if(k==='c'){e.preventDefault();$('bchat').click()}
+});
 </script>
 </body>
 </html>
