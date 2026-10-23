@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Salas — compartilhe sua tela</title>
+<meta name="description" content="Salas simples para compartilhar a tela, direto entre navegadores.">
 <style>
 :root{
 --bg1:#dfe9ff;--bg2:#f6e3ff;--bg3:#ffe6d6;
@@ -128,11 +129,12 @@ animation:tilein .85s var(--spring) both;transition:transform .5s var(--spring),
   </div>
 </section>
 
-<script>
+<script type="module">
+import {joinRoom} from 'https://esm.sh/trystero@0.21.5';
+
 const $=id=>document.getElementById(id);
-const me=Math.random().toString(36).slice(2,10);
-const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
-let room=null,myName='',pcs={},names={},scr=null,shownAv={};
+const APP_ID='salas-glass-app-v1';
+let room=null,myName='',scr=null,names={},peers=new Set(),sendName=null,sendStop=null;
 
 try{const h=location.hash.slice(1);if(h)$('code').value=h}catch(e){}
 try{$('name').value=localStorage.getItem('salas-nome')||''}catch(e){}
@@ -140,107 +142,71 @@ try{$('name').value=localStorage.getItem('salas-nome')||''}catch(e){}
 const clean=s=>s.toLowerCase().trim().replace(/[^a-z0-9_.-]+/g,'-').replace(/^[^a-z0-9]+/,'').slice(0,48);
 const err=m=>$('err').textContent=m||'';
 const hue=s=>{let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))%360;return h};
+const label=id=>(names[id]||'Alguém')+' está compartilhando';
 
-$('new').onclick=()=>{$('code').value='sala-'+Math.random().toString(36).slice(2,7);enter()};
+$('new').onclick=()=>{$('code').value='sala-'+Math.random().toString(36).slice(2,8);enter()};
 $('join').onclick=enter;
 ['name','code'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key==='Enter')enter()}));
 
-async function enter(){
+function enter(){
   err('');
   myName=$('name').value.trim()||'Visitante';
   const code=clean($('code').value);
   if(!code){err('Digite um código de sala.');return}
+  if(!window.isSecureContext||!navigator.mediaDevices||!navigator.mediaDevices.getDisplayMedia){
+    err('Este navegador não permite compartilhar tela aqui. Use https e um navegador de computador.');return}
   try{localStorage.setItem('salas-nome',myName)}catch(e){}
-  let rtc=null;
-  try{rtc=await claude.use('room')}catch(e){}
-  if(!rtc){err('Não foi possível conectar. Abra a página pelo link do artefato no Claude.');return}
-  try{room=await rtc.join(code)}catch(e){err('Não consegui entrar: '+(e&&e.message||'erro'));return}
+  try{room=joinRoom({appId:APP_ID},code)}catch(e){err('Não consegui entrar na sala.');console.error(e);return}
+  try{history.replaceState(null,'','#'+code)}catch(e){}
+
+  const [sn,gn]=room.makeAction('nome');sendName=sn;
+  const [ss,gs]=room.makeAction('parou');sendStop=ss;
+  gn((n,id)=>{names[id]=String(n).slice(0,24);peers.add(id);renderAvs();
+    document.querySelectorAll('.tile[data-peer="'+id+'"] .tag').forEach(t=>t.lastChild.textContent=label(id))});
+  gs((_,id)=>document.querySelectorAll('.tile[data-peer="'+id+'"]').forEach(dropTile));
+
+  room.onPeerJoin(id=>{peers.add(id);sendName(myName,id);if(scr)room.addStream(scr,id);renderAvs()});
+  room.onPeerLeave(id=>{peers.delete(id);delete names[id];
+    document.querySelectorAll('.tile[data-peer="'+id+'"]').forEach(dropTile);renderAvs()});
+  room.onPeerStream((s,id)=>{
+    addTile('r'+s.id,s,label(id),false,id);
+    s.onremovetrack=()=>{if(!s.getTracks().length)removeTile('r'+s.id)};
+  });
+
   $('lobby').classList.add('hide');$('app').classList.remove('hide');
-  $('rcv').textContent=code;
-  room.on('sig',onSig);
-  room.onPeers(onPeers);
-  room.presence({pid:me,name:myName});
-  renderAvs([]);
+  $('rcv').textContent=code;renderAvs();
 }
+
 $('rc').onclick=()=>{
-  try{navigator.clipboard.writeText($('rcv').textContent)}catch(e){}
-  const v=$('rcv'),t=v.textContent;v.textContent='Copiado ✓';setTimeout(()=>v.textContent=t,1200);
+  const v=$('rcv'),t=v.textContent;
+  const link=location.origin+location.pathname+'#'+t;
+  try{navigator.clipboard.writeText(link)}catch(e){}
+  v.textContent='Link copiado ✓';setTimeout(()=>v.textContent=t,1300);
 };
 
-function renderAvs(list){
-  const all=[{id:me,name:myName,you:1},...list.map(p=>({id:p.presence.pid,name:names[p.presence.pid]}))];
-  const box=$('avs');const keep=new Set(all.map(a=>a.id));
-  [...box.children].forEach(c=>{if(!keep.has(c.dataset.id)){c.remove();delete shownAv[c.dataset.id]}});
+function renderAvs(){
+  const all=[{id:'me',name:myName,you:1},...[...peers].map(id=>({id,name:names[id]||'?'}))];
+  const box=$('avs'),keep=new Set(all.map(a=>a.id));
+  [...box.children].forEach(c=>{if(!keep.has(c.dataset.id))c.remove()});
   all.forEach(a=>{
-    if(shownAv[a.id])return;shownAv[a.id]=1;
-    const d=document.createElement('div');d.className='av';d.dataset.id=a.id;
+    let d=[...box.children].find(c=>c.dataset.id===a.id);
+    if(!d){
+      d=document.createElement('div');d.className='av';d.dataset.id=a.id;
+      d.style.background='linear-gradient(145deg,hsl('+hue(a.id)+' 85% 62%),hsl('+((hue(a.id)+40)%360)+' 80% 52%))';
+      box.append(d);
+    }
     d.textContent=(a.name||'?').trim().charAt(0).toUpperCase();
-    d.style.background='linear-gradient(145deg,hsl('+hue(a.id)+' 85% 62%),hsl('+((hue(a.id)+40)%360)+' 80% 52%))';
-    d.title=a.name+(a.you?' (você)':'');box.append(d);
+    d.title=a.name+(a.you?' (você)':'');
   });
 }
 
-function onPeers(ch){
-  const list=ch.peers.filter(p=>p.presence&&p.presence.pid&&p.presence.pid!==me);
-  list.forEach(p=>{names[p.presence.pid]=String(p.presence.name||'Visitante').slice(0,24);getPc(p.presence.pid)});
-  ch.left.forEach(p=>{const id=p.presence&&p.presence.pid;if(id)closePc(id)});
-  renderAvs(list);
-}
-
-const send=(to,o)=>room&&room.emit('sig',{to,from:me,...o}).catch(()=>{});
-
-function getPc(pid){
-  if(pcs[pid])return pcs[pid];
-  const pc=new RTCPeerConnection(ICE);
-  const st={pc,polite:me<pid,making:false,ignore:false};
-  pcs[pid]=st;
-  pc.onnegotiationneeded=async()=>{
-    try{st.making=true;await pc.setLocalDescription();
-      send(pid,{d:{type:pc.localDescription.type,sdp:pc.localDescription.sdp}})}
-    catch(e){console.warn(e)}finally{st.making=false}
-  };
-  pc.onicecandidate=e=>{if(e.candidate)send(pid,{c:e.candidate.toJSON()})};
-  pc.ontrack=e=>{
-    const s=e.streams[0];if(!s)return;
-    addTile('r'+s.id,s,(names[pid]||'Alguém')+' está compartilhando',false,pid);
-    s.onremovetrack=()=>{if(!s.getTracks().length)removeTile('r'+s.id)};
-  };
-  if(scr)scr.getTracks().forEach(t=>pc.addTrack(t,scr));
-  return st;
-}
-function closePc(pid){
-  const st=pcs[pid];if(!st)return;
-  try{st.pc.close()}catch(e){}
-  delete pcs[pid];
-  document.querySelectorAll('.tile[data-peer="'+pid+'"]').forEach(t=>dropTile(t));
-}
-
-async function onSig(m){
-  const d=m.data;if(!d||d.to!==me||!d.from||m.isMe)return;
-  const st=getPc(d.from),pc=st.pc;
-  try{
-    if(d.d){
-      const collision=d.d.type==='offer'&&(st.making||pc.signalingState!=='stable');
-      st.ignore=!st.polite&&collision;
-      if(st.ignore)return;
-      await pc.setRemoteDescription(d.d);
-      if(d.d.type==='offer'){
-        await pc.setLocalDescription();
-        send(d.from,{d:{type:pc.localDescription.type,sdp:pc.localDescription.sdp}});
-      }
-    }else if(d.c){
-      try{await pc.addIceCandidate(d.c)}catch(e){if(!st.ignore)throw e}
-    }
-  }catch(e){console.warn(e)}
-}
-
-function addTile(key,stream,label,mute,peer){
+function addTile(key,stream,text,mute,peer){
   let t=document.querySelector('.tile[data-key="'+key+'"]');
   if(!t){
     t=document.createElement('div');t.className='tile';t.dataset.key=key;if(peer)t.dataset.peer=peer;
     const v=document.createElement('video');v.autoplay=true;v.playsInline=true;v.muted=mute;
     const g=document.createElement('span');g.className='tag glass';
-    g.innerHTML='<b></b>';g.append(document.createTextNode(label));
+    g.innerHTML='<b></b>';g.append(document.createTextNode(text));
     t.append(v,g);
     t.onclick=()=>{
       if(document.fullscreenElement)document.exitFullscreen();
@@ -265,28 +231,27 @@ async function toggleScr(){
     const s=await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});
     scr=s;
     addTile('l-scr',s,'Sua tela',true);
-    Object.values(pcs).forEach(st=>s.getTracks().forEach(t=>st.pc.addTrack(t,s)));
+    room.addStream(s);
     s.getVideoTracks()[0].onended=stopScr;
     $('bscr').classList.replace('pri','dg');$('lbl').textContent='Parar de compartilhar';
   }catch(e){
-    if(e&&e.name==='NotAllowedError'&&/permission|denied/i.test(e.message||'')&&window.top!==window)
-      alert('O navegador bloqueou o compartilhamento dentro deste quadro. Abra o link do artefato em uma aba própria e tente de novo.');
-    else if(e&&e.name!=='NotAllowedError')alert('Não foi possível compartilhar a tela: '+(e.message||e));
+    if(e&&e.name!=='NotAllowedError')alert('Não foi possível compartilhar a tela: '+(e.message||e));
   }
 }
 function stopScr(){
   if(!scr)return;const s=scr;scr=null;
-  Object.values(pcs).forEach(st=>st.pc.getSenders().forEach(x=>{if(x.track&&s.getTracks().includes(x.track))try{st.pc.removeTrack(x)}catch(e){}}));
+  try{room.removeStream(s)}catch(e){}
+  try{sendStop(1)}catch(e){}
   s.getTracks().forEach(t=>t.stop());
   removeTile('l-scr');
   $('bscr').classList.replace('dg','pri');$('lbl').textContent='Compartilhar tela';
 }
 $('bscr').onclick=toggleScr;
-$('bleave').onclick=async()=>{
-  stopScr();Object.keys(pcs).forEach(closePc);
-  try{await room.leave()}catch(e){}
-  room=null;shownAv={};$('avs').innerHTML='';
-  setTimeout(()=>document.querySelectorAll('.tile').forEach(t=>t.remove()),400);
+$('bleave').onclick=()=>{
+  stopScr();
+  try{room.leave()}catch(e){}
+  room=null;peers.clear();names={};$('avs').innerHTML='';
+  document.querySelectorAll('.tile').forEach(dropTile);
   $('app').classList.add('hide');$('lobby').classList.remove('hide');
 };
 </script>
