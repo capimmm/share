@@ -4,6 +4,8 @@ Salas simples para compartilhar a tela direto entre navegadores (WebRTC, sem ser
 Visual inspirado no vidro líquido do iOS.
 
 ## Recursos
+- Indicador de conexão no topo, destaque de tela (📌), salvar imagem (📸), janela flutuante (⧉)
+- Tema claro/escuro (botão 🌓) e atalhos no computador: S tela, V câmera, M microfone, C chat
 - Link de convite com `#codigo`: abre e já entra na sala (só pede o nome, ou nem isso se já estiver salvo)
 - Cartões na tela inicial: o que dá para fazer e blog de novidades (edite a lista `POSTS` no `index.html`)
 - Aviso para todos quando alguém começa a compartilhar
@@ -18,8 +20,11 @@ Visual inspirado no vidro líquido do iOS.
 2. Toque no código no topo para copiar o link e envie para quem vai entrar.
 3. Clique em **Compartilhar tela**. Toque numa tela recebida para ver em tela cheia.
 
-## Links publicados
-1. https://capimmm.github.io/share/
+## Publicar no GitHub Pages
+1. Crie um repositório público no GitHub.
+2. Envie `index.html` e este `README.md` para a branch `main`.
+3. Em **Settings → Pages**, escolha *Deploy from a branch*, branch `main`, pasta `/ (root)`.
+4. Em cerca de um minuto o site fica em `https://SEU-USUARIO.github.io/NOME-DO-REPO/`.
 
 ## Como funciona
 - Usa a biblioteca [Trystero](https://github.com/dmotz/trystero) para as pessoas se encontrarem pelo código da sala (via relays públicos) e então trocarem vídeo diretamente.
@@ -33,3 +38,6 @@ Navegadores de celular (Android e iPhone) não permitem compartilhar a tela pelo
 - Sem servidor TURN, algumas redes muito restritas (corporativas, NAT rígido) não conseguem conectar.
 - O código da sala é a única proteção: use códigos difíceis de adivinhar.
 - A versão do Trystero está fixada em `index.html`; atualize ali se quiser uma mais nova.
+
+## Se demorar para conectar
+A busca de pessoas usa trackers públicos (estratégia `torrent` do Trystero) e pode levar alguns segundos. Se ainda ficar lento, as opções são: atualizar a versão do Trystero em `index.html`, ou ter um servidor de sinalização próprio (por exemplo PeerJS ou um WebSocket seu) e um servidor TURN.
