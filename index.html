@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Salas — compartilhe sua tela</title>
+<meta name="theme-color" content="#5ea0ff">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="description" content="Salas simples para compartilhar a tela, direto entre navegadores.">
 <style>
 :root{
@@ -93,6 +96,46 @@ animation:tilein .85s var(--spring) both;transition:transform .5s var(--spring),
 @keyframes ping{70%{box-shadow:0 0 0 8px rgba(48,209,88,0)}100%{box-shadow:0 0 0 0 rgba(48,209,88,0)}}
 @media (prefers-reduced-motion:reduce){*,*::before{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 @media (max-width:520px){#bar .share{min-width:0}.lbl-s{font-size:15px}}
+
+html,body{overscroll-behavior:none;touch-action:manipulation}
+.note{text-align:center;color:var(--mut);font-size:13px;margin-top:-2px}
+#bar{gap:8px;max-width:calc(100% - 16px)}
+.btn.round.on{background:linear-gradient(180deg,#3b9bff,#0a73f0);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 6px 18px rgba(10,132,255,.45)}
+.btn.round{position:relative;font-size:22px}
+.badge{position:absolute;top:8px;right:8px;width:12px;height:12px;border-radius:50%;background:var(--dg);border:2px solid var(--glass-s)}
+.tctl{position:absolute;right:12px;top:12px;z-index:2;display:flex;gap:8px}
+.tbtn{width:38px;height:38px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;font-size:17px;background:var(--glass-s);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:inset 0 1px 0 var(--edge);transition:transform .4s var(--spring)}
+.tbtn:active{transform:scale(.88)}
+#chat{position:fixed;right:16px;top:calc(env(safe-area-inset-top,0px) + 76px);bottom:calc(env(safe-area-inset-bottom,0px) + 100px);width:340px;z-index:6;border-radius:30px;display:flex;flex-direction:column;overflow:hidden;opacity:0;pointer-events:none;transform:translateX(40px) scale(.94);transition:transform .6s var(--spring),opacity .35s var(--ease)}
+#chat.open{opacity:1;pointer-events:auto;transform:none}
+#chat h3{margin:0;padding:16px 20px 8px;font-size:17px}
+#msgs{flex:1;overflow:auto;padding:6px 14px;display:flex;flex-direction:column;gap:8px}
+.msg{max-width:84%;padding:8px 13px;border-radius:20px;background:var(--glass-s);box-shadow:inset 0 1px 0 var(--edge);font-size:15px;word-break:break-word;animation:pop .5s var(--spring) both;align-self:flex-start}
+.msg.me{align-self:flex-end;background:linear-gradient(180deg,#3b9bff,#0a73f0);color:#fff}
+.msg small{display:block;font-size:11px;font-weight:600;opacity:.65}
+#cf{display:flex;gap:8px;padding:10px}
+#cf input{flex:1;border:0;outline:0;border-radius:999px;padding:11px 16px;font-size:16px;background:var(--glass-s);box-shadow:inset 0 1px 0 var(--edge)}
+#cf button{width:44px;height:44px;border-radius:50%;border:0;cursor:pointer;color:#fff;font-size:20px;background:linear-gradient(180deg,#3b9bff,#0a73f0);transition:transform .4s var(--spring)}
+#cf button:active{transform:scale(.88)}
+#picker{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 94px);transform:translateX(-50%);z-index:7;display:flex;gap:4px;padding:8px;border-radius:999px;animation:up .6s var(--spring) both}
+#picker button{border:0;background:none;font-size:27px;width:46px;height:46px;border-radius:50%;cursor:pointer;transition:transform .35s var(--spring)}
+#picker button:hover{transform:scale(1.3) translateY(-4px)}
+#picker button:active{transform:scale(.9)}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:8;overflow:hidden}
+.fl{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 100px);font-size:42px;animation:fly 3s var(--ease) forwards}
+@keyframes fly{0%{opacity:0;transform:translateY(0) scale(.4)}12%{opacity:1;transform:translateY(-40px) scale(1.1)}100%{opacity:0;transform:translateY(-55vh) scale(1) rotate(12deg)}}
+@media (max-width:560px){
+#bar{gap:6px;padding:6px}
+#bar .btn.round,#bar .share{width:48px;height:48px;min-width:0;padding:0}
+.lbl-s{display:none}
+#grid{padding-left:10px;padding-right:10px;gap:10px;grid-template-columns:1fr}
+.tile{border-radius:24px}
+#top{padding:6px 6px 6px 14px;gap:8px}
+.av{width:30px;height:30px}
+#chat{left:10px;right:10px;width:auto;top:auto;height:min(62dvh,480px);bottom:calc(env(safe-area-inset-bottom,0px) + 86px);transform:translateY(60px) scale(.94)}
+#picker{bottom:calc(env(safe-area-inset-bottom,0px) + 82px)}
+#picker button{width:42px;height:42px;font-size:24px}
+}
 </style>
 </head>
 <body>
@@ -107,81 +150,102 @@ animation:tilein .85s var(--spring) both;transition:transform .5s var(--spring),
     <label class="field"><span>Código da sala</span><input id="code" maxlength="40" placeholder="Ex.: reuniao-12" autocapitalize="off" autocomplete="off"></label>
     <button class="btn pri" id="join">Entrar na sala</button>
     <button class="btn" id="new">Criar sala nova</button>
-    <div id="err"></div>
+    <div id="note" class="note hide"></div><div id="err"></div>
   </div>
 </section>
 
 <section id="app" class="hide">
   <div id="top" class="glass">
-    <button class="code" id="rc" title="Copiar código"><small>Sala</small><span id="rcv"></span>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="3"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg></button>
+    <button class="code" id="rc" title="Convidar"><small>Sala</small><span id="rcv"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4M5 13v5a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-5"/></svg></button>
     <div class="avs" id="avs"></div>
   </div>
   <main id="grid"></main>
   <div id="empty"><div class="glass">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="13" rx="3.5"/><path d="M8 21h8M12 17v4"/></svg>
-    <h2>Nenhuma tela compartilhada</h2>
-    <p>Toque em Compartilhar tela ou envie o código da sala para convidar alguém.</p>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="13" rx="3.5"/><path d="M8 21h8M12 17v4"/></svg>
+    <h2>Nada sendo compartilhado</h2>
+    <p id="emp">Toque em Compartilhar tela ou convide alguém tocando no código da sala.</p>
   </div></div>
   <div id="bar" class="glass">
-    <button class="btn pri share" id="bscr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="13" rx="3.5"/><path d="M12 13V8m0 0-2.5 2.5M12 8l2.5 2.5M8 21h8"/></svg><span class="lbl-s" id="lbl">Compartilhar tela</span></button>
+    <button class="btn pri share" id="bscr" title="Compartilhar tela"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="13" rx="3.5"/><path d="M12 13V8m0 0-2.5 2.5M12 8l2.5 2.5M8 21h8"/></svg><span class="lbl-s" id="lbl">Compartilhar tela</span></button>
+    <button class="btn round" id="bcam" title="Câmera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="3"/><path d="m16 10 5-3v10l-5-3"/></svg></button>
+    <button class="btn round" id="bmic" title="Microfone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+    <button class="btn round" id="brea" title="Reagir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 14a4.5 4.5 0 0 0 8 0M9 9.5h.01M15 9.5h.01"/></svg></button>
+    <button class="btn round" id="bchat" title="Chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><i class="badge hide" id="badge"></i></button>
     <button class="btn round" id="bleave" title="Sair"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h3M15 8l4 4-4 4M19 12H9"/></svg></button>
   </div>
+  <div id="picker" class="glass hide"></div>
+  <aside id="chat" class="glass"><h3>Chat da sala</h3><div id="msgs"></div>
+    <form id="cf" autocomplete="off"><input id="ci" maxlength="500" placeholder="Mensagem"><button type="submit">↑</button></form></aside>
+  <div id="fx"></div>
 </section>
-
 <script type="module">
 import {joinRoom} from 'https://esm.sh/trystero@0.21.5';
-
 const $=id=>document.getElementById(id);
 const APP_ID='salas-glass-app-v1';
-let room=null,myName='',scr=null,names={},peers=new Set(),sendName=null,sendStop=null;
+const EMO=['👍','❤️','😂','👏','🔥','😮'];
+const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Mac/.test(navigator.platform));
+const canScr=!!(navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia)&&!mobile;
+let room=null,myName='',names={},peers=new Set(),local={tela:null,cam:null,mic:null},act={},auds={},wake=null,unread=0;
 
+if(!canScr){
+  $('bscr').classList.add('hide');
+  $('note').textContent='Neste aparelho você assiste às telas, usa o chat e pode compartilhar a câmera.';
+  $('note').classList.remove('hide');
+  $('emp').textContent='Aqui você assiste às telas de quem compartilhar. Use a câmera, o microfone e o chat.';
+}
 try{const h=location.hash.slice(1);if(h)$('code').value=h}catch(e){}
 try{$('name').value=localStorage.getItem('salas-nome')||''}catch(e){}
 
 const clean=s=>s.toLowerCase().trim().replace(/[^a-z0-9_.-]+/g,'-').replace(/^[^a-z0-9]+/,'').slice(0,48);
 const err=m=>$('err').textContent=m||'';
 const hue=s=>{let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))%360;return h};
-const label=id=>(names[id]||'Alguém')+' está compartilhando';
+const label=(id,k)=>(names[id]||'Alguém')+(k==='cam'?' está com a câmera':' está compartilhando');
+const tiles=(id,k)=>document.querySelectorAll('.tile[data-peer="'+id+'"]'+(k?'[data-kind="'+k+'"]':''));
+const dropAud=id=>{const a=auds[id];if(a){a.pause();a.srcObject=null;delete auds[id]}};
+
+EMO.forEach(e=>{const b=document.createElement('button');b.textContent=e;b.onclick=()=>{act.sr(e);fx(e);$('picker').classList.add('hide')};$('picker').append(b)});
 
 $('new').onclick=()=>{$('code').value='sala-'+Math.random().toString(36).slice(2,8);enter()};
 $('join').onclick=enter;
 ['name','code'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key==='Enter')enter()}));
 
-function enter(){
+async function enter(){
   err('');
   myName=$('name').value.trim()||'Visitante';
   const code=clean($('code').value);
   if(!code){err('Digite um código de sala.');return}
-  if(!window.isSecureContext||!navigator.mediaDevices||!navigator.mediaDevices.getDisplayMedia){
-    err('Este navegador não permite compartilhar tela aqui. Use https e um navegador de computador.');return}
   try{localStorage.setItem('salas-nome',myName)}catch(e){}
   try{room=joinRoom({appId:APP_ID},code)}catch(e){err('Não consegui entrar na sala.');console.error(e);return}
   try{history.replaceState(null,'','#'+code)}catch(e){}
 
-  const [sn,gn]=room.makeAction('nome');sendName=sn;
-  const [ss,gs]=room.makeAction('parou');sendStop=ss;
+  const [sn,gn]=room.makeAction('nome'),[ss,gs]=room.makeAction('parou'),[sc,gc]=room.makeAction('chat'),[sr,gr]=room.makeAction('reac');
+  act={sn,ss,sc,sr};
   gn((n,id)=>{names[id]=String(n).slice(0,24);peers.add(id);renderAvs();
-    document.querySelectorAll('.tile[data-peer="'+id+'"] .tag').forEach(t=>t.lastChild.textContent=label(id))});
-  gs((_,id)=>document.querySelectorAll('.tile[data-peer="'+id+'"]').forEach(dropTile));
+    tiles(id).forEach(t=>t.querySelector('.tag').lastChild.textContent=label(id,t.dataset.kind))});
+  gs((k,id)=>{tiles(id,k).forEach(dropTile);if(k==='mic')dropAud(id)});
+  gc((m,id)=>addMsg(names[id]||'Alguém',String(m).slice(0,500),false));
+  gr(e=>{if(EMO.includes(e))fx(e)});
 
-  room.onPeerJoin(id=>{peers.add(id);sendName(myName,id);if(scr)room.addStream(scr,id);renderAvs()});
-  room.onPeerLeave(id=>{peers.delete(id);delete names[id];
-    document.querySelectorAll('.tile[data-peer="'+id+'"]').forEach(dropTile);renderAvs()});
-  room.onPeerStream((s,id)=>{
-    addTile('r'+s.id,s,label(id),false,id);
+  room.onPeerJoin(id=>{peers.add(id);sn(myName,id);
+    for(const k in local)if(local[k])room.addStream(local[k],id,{k});renderAvs()});
+  room.onPeerLeave(id=>{peers.delete(id);delete names[id];tiles(id).forEach(dropTile);dropAud(id);renderAvs()});
+  room.onPeerStream((s,id,meta)=>{
+    const k=(meta&&meta.k)||(s.getVideoTracks().length?'tela':'mic');
+    if(k==='mic'){dropAud(id);const a=new Audio();a.autoplay=true;a.srcObject=s;auds[id]=a;a.play().catch(()=>{});return}
+    addTile('r'+s.id,s,label(id,k),false,id,k);
     s.onremovetrack=()=>{if(!s.getTracks().length)removeTile('r'+s.id)};
   });
 
   $('lobby').classList.add('hide');$('app').classList.remove('hide');
   $('rcv').textContent=code;renderAvs();
+  try{wake=await navigator.wakeLock.request('screen')}catch(e){}
 }
 
 $('rc').onclick=()=>{
-  const v=$('rcv'),t=v.textContent;
-  const link=location.origin+location.pathname+'#'+t;
+  const code=$('rcv').textContent,link=location.origin+location.pathname+'#'+code;
+  if(navigator.share){navigator.share({title:'Salas',text:'Entre na minha sala',url:link}).catch(()=>{});return}
   try{navigator.clipboard.writeText(link)}catch(e){}
-  v.textContent='Link copiado ✓';setTimeout(()=>v.textContent=t,1300);
+  const v=$('rcv');v.textContent='Link copiado ✓';setTimeout(()=>v.textContent=code,1300);
 };
 
 function renderAvs(){
@@ -190,67 +254,93 @@ function renderAvs(){
   [...box.children].forEach(c=>{if(!keep.has(c.dataset.id))c.remove()});
   all.forEach(a=>{
     let d=[...box.children].find(c=>c.dataset.id===a.id);
-    if(!d){
-      d=document.createElement('div');d.className='av';d.dataset.id=a.id;
-      d.style.background='linear-gradient(145deg,hsl('+hue(a.id)+' 85% 62%),hsl('+((hue(a.id)+40)%360)+' 80% 52%))';
-      box.append(d);
-    }
-    d.textContent=(a.name||'?').trim().charAt(0).toUpperCase();
-    d.title=a.name+(a.you?' (você)':'');
+    if(!d){d=document.createElement('div');d.className='av';d.dataset.id=a.id;
+      d.style.background='linear-gradient(145deg,hsl('+hue(a.id)+' 85% 62%),hsl('+((hue(a.id)+40)%360)+' 80% 52%))';box.append(d)}
+    d.textContent=(a.name||'?').trim().charAt(0).toUpperCase();d.title=a.name+(a.you?' (você)':'');
   });
 }
 
-function addTile(key,stream,text,mute,peer){
+function addTile(key,stream,text,mute,peer,kind){
   let t=document.querySelector('.tile[data-key="'+key+'"]');
   if(!t){
-    t=document.createElement('div');t.className='tile';t.dataset.key=key;if(peer)t.dataset.peer=peer;
+    t=document.createElement('div');t.className='tile';t.dataset.key=key;t.dataset.kind=kind||'tela';if(peer)t.dataset.peer=peer;
     const v=document.createElement('video');v.autoplay=true;v.playsInline=true;v.muted=mute;
-    const g=document.createElement('span');g.className='tag glass';
-    g.innerHTML='<b></b>';g.append(document.createTextNode(text));
+    const g=document.createElement('span');g.className='tag glass';g.innerHTML='<b></b>';g.append(document.createTextNode(text));
     t.append(v,g);
+    if(!mute){
+      const c=document.createElement('div');c.className='tctl';
+      const m=document.createElement('button');m.className='tbtn';m.textContent='🔊';
+      m.onclick=e=>{e.stopPropagation();v.muted=!v.muted;m.textContent=v.muted?'🔇':'🔊'};
+      c.append(m);t.append(c);
+    }
     t.onclick=()=>{
       if(document.fullscreenElement)document.exitFullscreen();
       else if(t.requestFullscreen)t.requestFullscreen().catch(()=>{});
+      else if(v.webkitEnterFullscreen)v.webkitEnterFullscreen();
     };
     $('grid').append(t);
   }
   const v=t.querySelector('video');if(v.srcObject!==stream)v.srcObject=stream;
-  v.play().catch(()=>{});
+  v.play().catch(()=>{if(!v.muted){v.muted=true;const m=t.querySelector('.tbtn');if(m)m.textContent='🔇';v.play().catch(()=>{})}});
   checkEmpty();
 }
 function dropTile(t){t.classList.add('out');setTimeout(()=>{t.remove();checkEmpty()},380)}
 function removeTile(key){const t=document.querySelector('.tile[data-key="'+key+'"]');if(t)dropTile(t)}
-function checkEmpty(){
-  const has=[...document.querySelectorAll('.tile')].some(t=>!t.classList.contains('out'));
-  $('empty').classList.toggle('hide',has);
+function checkEmpty(){$('empty').classList.toggle('hide',[...document.querySelectorAll('.tile')].some(t=>!t.classList.contains('out')))}
+
+function ui(k,on){
+  if(k==='tela'){$('bscr').classList.toggle('pri',!on);$('bscr').classList.toggle('dg',on);$('lbl').textContent=on?'Parar de compartilhar':'Compartilhar tela'}
+  else $(k==='cam'?'bcam':'bmic').classList.toggle('on',on);
+}
+async function start(k){
+  if(local[k]){stop(k);return}
+  if(!navigator.mediaDevices){alert('Este navegador não libera câmera, microfone ou tela. Use https.');return}
+  try{
+    const md=navigator.mediaDevices;let s;
+    if(k==='tela')s=await md.getDisplayMedia({video:true,audio:true});
+    else if(k==='cam')s=await md.getUserMedia({video:mobile?{facingMode:{ideal:'environment'}}:true,audio:false});
+    else s=await md.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
+    local[k]=s;
+    if(k!=='mic')addTile('l-'+k,s,k==='cam'?'Sua câmera':'Sua tela',true,null,k);
+    room.addStream(s,undefined,{k});
+    const vt=s.getVideoTracks()[0];if(vt)vt.onended=()=>stop(k);
+    ui(k,true);
+  }catch(e){if(e&&e.name!=='NotAllowedError')alert('Não foi possível iniciar: '+(e.message||e))}
+}
+function stop(k){
+  const s=local[k];if(!s)return;local[k]=null;
+  try{room.removeStream(s)}catch(e){}
+  try{act.ss(k)}catch(e){}
+  s.getTracks().forEach(t=>t.stop());
+  removeTile('l-'+k);ui(k,false);
+}
+$('bscr').onclick=()=>start('tela');$('bcam').onclick=()=>start('cam');$('bmic').onclick=()=>start('mic');
+
+function addMsg(name,text,mine){
+  const d=document.createElement('div');d.className='msg'+(mine?' me':'');
+  if(!mine){const s=document.createElement('small');s.textContent=name;d.append(s)}
+  d.append(document.createTextNode(text));$('msgs').append(d);$('msgs').scrollTop=1e9;
+  if(!mine&&!$('chat').classList.contains('open'))$('badge').classList.remove('hide');
+}
+$('cf').onsubmit=e=>{e.preventDefault();const v=$('ci').value.trim();if(!v||!room)return;act.sc(v);addMsg('Você',v,true);$('ci').value=''};
+$('bchat').onclick=()=>{
+  const c=$('chat');c.classList.toggle('open');$('picker').classList.add('hide');
+  if(c.classList.contains('open')){$('badge').classList.add('hide');if(!mobile)$('ci').focus()}
+};
+$('brea').onclick=e=>{e.stopPropagation();$('picker').classList.toggle('hide')};
+document.addEventListener('click',e=>{if(!e.target.closest('#picker'))$('picker').classList.add('hide')});
+function fx(e){
+  const d=document.createElement('div');d.className='fl';d.textContent=e;d.style.left=(8+Math.random()*80)+'%';
+  $('fx').append(d);setTimeout(()=>d.remove(),3100);
 }
 
-async function toggleScr(){
-  if(scr){stopScr();return}
-  try{
-    const s=await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});
-    scr=s;
-    addTile('l-scr',s,'Sua tela',true);
-    room.addStream(s);
-    s.getVideoTracks()[0].onended=stopScr;
-    $('bscr').classList.replace('pri','dg');$('lbl').textContent='Parar de compartilhar';
-  }catch(e){
-    if(e&&e.name!=='NotAllowedError')alert('Não foi possível compartilhar a tela: '+(e.message||e));
-  }
-}
-function stopScr(){
-  if(!scr)return;const s=scr;scr=null;
-  try{room.removeStream(s)}catch(e){}
-  try{sendStop(1)}catch(e){}
-  s.getTracks().forEach(t=>t.stop());
-  removeTile('l-scr');
-  $('bscr').classList.replace('dg','pri');$('lbl').textContent='Compartilhar tela';
-}
-$('bscr').onclick=toggleScr;
 $('bleave').onclick=()=>{
-  stopScr();
+  ['tela','cam','mic'].forEach(stop);
+  Object.keys(auds).forEach(dropAud);
   try{room.leave()}catch(e){}
-  room=null;peers.clear();names={};$('avs').innerHTML='';
+  try{wake&&wake.release()}catch(e){}
+  room=null;peers.clear();names={};$('avs').innerHTML='';$('msgs').innerHTML='';
+  $('chat').classList.remove('open');$('badge').classList.add('hide');
   document.querySelectorAll('.tile').forEach(dropTile);
   $('app').classList.add('hide');$('lobby').classList.remove('hide');
 };
