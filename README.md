@@ -20,11 +20,8 @@ Visual inspirado no vidro líquido do iOS.
 2. Toque no código no topo para copiar o link e envie para quem vai entrar.
 3. Clique em **Compartilhar tela**. Toque numa tela recebida para ver em tela cheia.
 
-## Publicar no GitHub Pages
-1. Crie um repositório público no GitHub.
-2. Envie `index.html` e este `README.md` para a branch `main`.
-3. Em **Settings → Pages**, escolha *Deploy from a branch*, branch `main`, pasta `/ (root)`.
-4. Em cerca de um minuto o site fica em `https://SEU-USUARIO.github.io/NOME-DO-REPO/`.
+## Links publicados na pagina
+1. https://capimmm.github.io/share/
 
 ## Como funciona
 - Usa a biblioteca [Trystero](https://github.com/dmotz/trystero) para as pessoas se encontrarem pelo código da sala (via relays públicos) e então trocarem vídeo diretamente.
